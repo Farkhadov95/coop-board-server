@@ -8,7 +8,8 @@ const PORT = process.env.PORT || 3000;
 
 const server = http.createServer(app);
 
-// app.use(cors())
+app.use(cors());
+
 const io = socketIo(server, {
     cors: {
         origin: "http://127.0.0.1:5173",
