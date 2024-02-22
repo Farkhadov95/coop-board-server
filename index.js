@@ -22,9 +22,9 @@ const io = socketIo(server, {
 io.on('connection', (socket) => {
     console.log('A user connected');
 
-    socket.on('canvasImage', (dataURL) => {
+    socket.on('canvasImage', (data) => {
         // Broadcast the canvas image data to all clients except the sender
-        socket.broadcast.emit('canvasImage', dataURL);
+        socket.broadcast.emit('canvasImage', data);
     });
 
     socket.on('disconnect', () => {
