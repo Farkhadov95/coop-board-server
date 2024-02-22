@@ -12,10 +12,7 @@ app.use(cors());
 
 const io = socketIo(server, {
     cors: {
-        origin: "http://127.0.0.1:5173",
-        methods: ["GET", "POST"],
-        allowedHeaders: ["my-custom-header"],
-        credentials: true
+        origin: "*"
     }
 });
 
