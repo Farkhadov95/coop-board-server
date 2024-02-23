@@ -24,7 +24,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('clearCanvas', () => {
-        socket.broadcast.emit('clearCanvas');
+        io.emit('clearCanvas');
     });
 
     socket.on('disconnect', () => {
