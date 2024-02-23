@@ -16,13 +16,15 @@ const io = socketIo(server, {
     }
 });
 
-
 io.on('connection', (socket) => {
     console.log('A user connected');
 
     socket.on('canvasImage', (data) => {
-        // Broadcast the canvas image data to all clients except the sender
         socket.broadcast.emit('canvasImage', data);
+    });
+
+    socket.on('clearCanvas', () => {
+        socket.broadcast.emit('clearCanvas');
     });
 
     socket.on('disconnect', () => {
