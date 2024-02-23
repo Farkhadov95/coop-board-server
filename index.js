@@ -20,6 +20,7 @@ io.on('connection', (socket) => {
     console.log('A user connected');
 
     socket.on('canvasImage', (data) => {
+        console.log('canvasImage');
         socket.broadcast.emit('canvasImage', data);
     });
 
