@@ -24,6 +24,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('clearCanvas', () => {
+        console.log('clearCanvas');
         socket.broadcast.emit('clearCanvas');
     });
 
