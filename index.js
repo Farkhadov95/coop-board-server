@@ -77,12 +77,16 @@ io.on('connection', (socket) => {
             }
             const newBoard = new Board({ title });
             await newBoard.save();
+
             console.log(`New board "${title}" created successfully.`);
+            const createdBoard = await Board.findOne({ title });
+
+            socket.broadcast.emit('createdCanvas', createdBoard);
         } catch (error) {
             console.error('Error saving canvas to MongoDB:', error);
         }
 
-        socket.broadcast.emit('createCanvas', { title, canvasData });
+        socket.broadcast.emit('createCanvas', { title });
     });
 
     socket.on('canvasImage', async ({ boardId, data }) => {
