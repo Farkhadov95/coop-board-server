@@ -89,7 +89,7 @@ app.get('/page/:title', async (req, res) => {
     }
 });
 
-app.get('/boards', async (req, res) => {
+app.get('/', async (req, res) => {
     try {
         const boards = await Board.find();
         res.json(boards);
