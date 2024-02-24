@@ -51,7 +51,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('getCanvasById', async (boardId) => {
+    socket.on('getCanvasById', async ({ boardId }) => {
         console.log(`getCanvasById for board with ID "${boardId}"`);
         try {
             const board = await Board.findById(boardId);
@@ -60,7 +60,7 @@ io.on('connection', (socket) => {
                 socket.emit('canvasNotFound');
                 return;
             }
-            socket.emit('canvasData', { boardId, content: board.content });
+            socket.emit('canvasData', board);
         } catch (error) {
             console.error('Error fetching canvas from MongoDB:', error);
             socket.emit('error', 'Internal server error');
