@@ -40,18 +40,41 @@ const io = socketIo(server, {
 io.on('connection', (socket) => {
     console.log('A user connected');
 
+    socket.on('getAllBoards', async () => {
+        console.log('getAllBoards');
+        try {
+            const boards = await Board.find();
+            socket.emit('allBoards', boards);
+        } catch (error) {
+            console.error('Error fetching boards from MongoDB:', error);
+            socket.emit('error', 'Internal server error');
+        }
+    });
+
+    socket.on('getCanvasById', async (boardId) => {
+        console.log(`getCanvasById for board with ID "${boardId}"`);
+        try {
+            const board = await Board.findById(boardId);
+            if (!board) {
+                console.log(`Board with ID "${boardId}" not found.`);
+                socket.emit('canvasNotFound');
+                return;
+            }
+            socket.emit('canvasData', { boardId, content: board.content });
+        } catch (error) {
+            console.error('Error fetching canvas from MongoDB:', error);
+            socket.emit('error', 'Internal server error');
+        }
+    });
+
     socket.on('createCanvas', async ({ title }) => {
         console.log('createCanvas');
-
         try {
-            // Check if the board already exists with the given title
             const existingBoard = await Board.findOne({ title });
             if (existingBoard) {
                 console.log(`Board with title "${title}" already exists.`);
                 return;
             }
-
-            // If the board doesn't exist, create a new one
             const newBoard = new Board({ title, content: '' });
             await newBoard.save();
             console.log(`New board "${title}" created successfully.`);
@@ -66,15 +89,11 @@ io.on('connection', (socket) => {
         console.log('canvasImage');
 
         try {
-            // Find the board with the specified ID
             const board = await Board.findById(boardId);
-
             if (!board) {
                 console.log(`Board with ID "${boardId}" not found.`);
                 return;
             }
-
-            // Update the content of the found board with the new canvas data
             board.content = data;
             await board.save();
             console.log(`Board with ID "${boardId}" updated with new canvas data.`);
@@ -87,17 +106,12 @@ io.on('connection', (socket) => {
 
     socket.on('clearCanvas', async (boardId) => {
         console.log(`clearCanvas for board with ID "${boardId}"`);
-
         try {
-            // Find the board with the specified ID
             const board = await Board.findById(boardId);
-
             if (!board) {
                 console.log(`Board with ID "${boardId}" not found.`);
                 return;
             }
-
-            // Clear the content of the found board
             board.content = '';
             await board.save();
             console.log(`Board with ID "${boardId}" canvas cleared.`);
@@ -108,50 +122,24 @@ io.on('connection', (socket) => {
         socket.broadcast.emit('clearCanvas', boardId);
     });
 
+    socket.on('deleteCanvas', async (boardId) => {
+        try {
+            const deletedCanvas = await Board.findByIdAndDelete(boardId);
+            if (!deletedCanvas) {
+                console.log(`Canvas with ID "${boardId}" not found.`);
+                return;
+            }
+            console.log(`Canvas with ID "${boardId}" deleted successfully`);
+            socket.emit('canvasDeleted', boardId);
+        } catch (error) {
+            console.error('Error deleting canvas:', error);
+        }
+    });
+
     socket.on('disconnect', () => {
         console.log('A user disconnected');
     });
 });
-
-app.get('/page/:title', async (req, res) => {
-    const { title } = req.params;
-    try {
-        const board = await Board.findOne({ title });
-        if (!board) {
-            return res.status(404).json({ message: 'Page not found' });
-        }
-        res.json({ title: board.title, content: board.content });
-    } catch (error) {
-        console.error('Error fetching page from MongoDB:', error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-});
-
-app.get('/boards', async (req, res) => {
-    try {
-        const boards = await Board.find();
-        res.json(boards);
-    } catch (error) {
-        console.error('Error fetching boards from MongoDB:', error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-});
-
-app.delete('/delete-canvas/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-        const deletedCanvas = await Board.findByIdAndDelete(id);
-        if (!deletedCanvas) {
-            return res.status(404).json({ message: 'Canvas not found' });
-        }
-        console.log(`Canvas with ID "${id}" deleted successfully`);
-        res.sendStatus(204); // No content response
-    } catch (error) {
-        console.error('Error deleting canvas:', error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-});
-
 
 server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
