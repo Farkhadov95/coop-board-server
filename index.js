@@ -12,6 +12,7 @@ app.use(cors());
 
 
 mongoose.set('strictQuery', false);
+// mongoose.connect('mongodb://localhost/playground')
 mongoose.connect(process.env.MONGO_URI)
     .then(() => {
         console.log('Connected to MongoDB...');
@@ -37,6 +38,19 @@ const io = socketIo(server, {
 
 io.on('connection', (socket) => {
     console.log('A user connected');
+
+    socket.on('createCanvas', async ({ title, canvasData }) => {
+        console.log('createCanvas');
+
+        try {
+            const board = new Board({ title, content: canvasData });
+            await board.save();
+        } catch (error) {
+            console.error('Error saving canvas to MongoDB:', error);
+        }
+
+        socket.broadcast.emit('createCanvas', { title, canvasData });
+    });
 
     socket.on('canvasImage', async (data) => {
         console.log('canvasImage');
@@ -81,6 +95,21 @@ app.get('/boards', async (req, res) => {
         res.json(boards);
     } catch (error) {
         console.error('Error fetching boards from MongoDB:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+app.delete('/delete-canvas/:title', async (req, res) => {
+    const { title } = req.params;
+    try {
+        const deletedCanvas = await Board.findOneAndDelete({ title });
+        if (!deletedCanvas) {
+            return res.status(404).json({ message: 'Canvas not found' });
+        }
+        console.log(`Canvas "${title}" deleted successfully`);
+        res.sendStatus(204); // No content response
+    } catch (error) {
+        console.error('Error deleting canvas:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 });
