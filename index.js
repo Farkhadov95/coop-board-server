@@ -40,7 +40,7 @@ const io = socketIo(server, {
 io.on('connection', (socket) => {
     console.log('A user connected');
 
-    socket.on('createCanvas', async ({ title, canvasData }) => {
+    socket.on('createCanvas', async ({ title }) => {
         console.log('createCanvas');
 
         try {
@@ -52,7 +52,7 @@ io.on('connection', (socket) => {
             }
 
             // If the board doesn't exist, create a new one
-            const newBoard = new Board({ title, content: canvasData });
+            const newBoard = new Board({ title, content: '' });
             await newBoard.save();
             console.log(`New board "${title}" created successfully.`);
         } catch (error) {
