@@ -75,7 +75,7 @@ io.on('connection', (socket) => {
                 console.log(`Board with title "${title}" already exists.`);
                 return;
             }
-            const newBoard = new Board({ title, content: '' });
+            const newBoard = new Board({ title });
             await newBoard.save();
             console.log(`New board "${title}" created successfully.`);
         } catch (error) {
