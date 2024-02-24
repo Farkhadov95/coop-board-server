@@ -22,6 +22,7 @@ mongoose.connect(process.env.MONGO_URI)
     });
 
 const boardsSchema = new mongoose.Schema({
+    _id: mongoose.Schema.Types.ObjectId,
     title: { type: String, required: true },
     content: { type: String, default: '' },
     createdAt: { type: Date, default: Date.now },
@@ -43,8 +44,17 @@ io.on('connection', (socket) => {
         console.log('createCanvas');
 
         try {
-            const board = new Board({ title, content: canvasData });
-            await board.save();
+            // Check if the board already exists with the given title
+            const existingBoard = await Board.findOne({ title });
+            if (existingBoard) {
+                console.log(`Board with title "${title}" already exists.`);
+                return;
+            }
+
+            // If the board doesn't exist, create a new one
+            const newBoard = new Board({ title, content: canvasData });
+            await newBoard.save();
+            console.log(`New board "${title}" created successfully.`);
         } catch (error) {
             console.error('Error saving canvas to MongoDB:', error);
         }
@@ -52,22 +62,50 @@ io.on('connection', (socket) => {
         socket.broadcast.emit('createCanvas', { title, canvasData });
     });
 
-    socket.on('canvasImage', async (data) => {
+    socket.on('canvasImage', async ({ boardId, data }) => {
         console.log('canvasImage');
 
         try {
-            const board = new Board({ title: 'Canvas Image', content: data });
+            // Find the board with the specified ID
+            const board = await Board.findById(boardId);
+
+            if (!board) {
+                console.log(`Board with ID "${boardId}" not found.`);
+                return;
+            }
+
+            // Update the content of the found board with the new canvas data
+            board.content = data;
             await board.save();
+            console.log(`Board with ID "${boardId}" updated with new canvas data.`);
         } catch (error) {
-            console.error('Error saving canvas image to MongoDB:', error);
+            console.error('Error updating canvas image in MongoDB:', error);
         }
 
-        socket.broadcast.emit('canvasImage', data);
+        socket.broadcast.emit('canvasImage', { boardId, data });
     });
 
-    socket.on('clearCanvas', () => {
-        console.log('clearCanvas');
-        socket.broadcast.emit('clearCanvas');
+    socket.on('clearCanvas', async (boardId) => {
+        console.log(`clearCanvas for board with ID "${boardId}"`);
+
+        try {
+            // Find the board with the specified ID
+            const board = await Board.findById(boardId);
+
+            if (!board) {
+                console.log(`Board with ID "${boardId}" not found.`);
+                return;
+            }
+
+            // Clear the content of the found board
+            board.content = '';
+            await board.save();
+            console.log(`Board with ID "${boardId}" canvas cleared.`);
+        } catch (error) {
+            console.error('Error clearing canvas in MongoDB:', error);
+        }
+
+        socket.broadcast.emit('clearCanvas', boardId);
     });
 
     socket.on('disconnect', () => {
@@ -99,14 +137,14 @@ app.get('/boards', async (req, res) => {
     }
 });
 
-app.delete('/delete-canvas/:title', async (req, res) => {
-    const { title } = req.params;
+app.delete('/delete-canvas/:id', async (req, res) => {
+    const { id } = req.params;
     try {
-        const deletedCanvas = await Board.findOneAndDelete({ title });
+        const deletedCanvas = await Board.findByIdAndDelete(id);
         if (!deletedCanvas) {
             return res.status(404).json({ message: 'Canvas not found' });
         }
-        console.log(`Canvas "${title}" deleted successfully`);
+        console.log(`Canvas with ID "${id}" deleted successfully`);
         res.sendStatus(204); // No content response
     } catch (error) {
         console.error('Error deleting canvas:', error);
