@@ -75,7 +75,8 @@ io.on('connection', (socket) => {
                 console.log(`Board with title "${title}" already exists.`);
                 return;
             }
-            const newBoard = new Board({ title });
+
+            const newBoard = new Board({ _id: new mongoose.Types.ObjectId(), title });
             await newBoard.save();
 
             console.log(`New board "${title}" created successfully.`);
