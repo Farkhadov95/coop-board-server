@@ -88,7 +88,7 @@ io.on('connection', (socket) => {
             console.error('Error saving canvas to MongoDB:', error);
         }
 
-        socket.broadcast.emit('createCanvas', { title });
+        socket.broadcast.emit('createCanvas', createdBoard);
     });
 
     socket.on('canvasImage', async ({ boardId, data }) => {
@@ -140,6 +140,8 @@ io.on('connection', (socket) => {
         } catch (error) {
             console.error('Error deleting canvas:', error);
         }
+
+        socket.broadcast.emit('canvasDeleted', boardId);
     });
 
     socket.on('disconnect', () => {
