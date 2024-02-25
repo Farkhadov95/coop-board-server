@@ -110,7 +110,7 @@ io.on('connection', (socket) => {
         socket.broadcast.emit('canvasImage', { boardId, data });
     });
 
-    socket.on('clearCanvas', async ({ boardId }) => {
+    socket.on('clearCanvas', async (boardId) => {
         console.log(`clearCanvas for board with ID "${boardId}"`);
         try {
             const board = await Board.findById(boardId);
@@ -128,7 +128,7 @@ io.on('connection', (socket) => {
         socket.broadcast.emit('clearCanvas', boardId);
     });
 
-    socket.on('deleteCanvas', async ({ boardId }) => {
+    socket.on('deleteCanvas', async (boardId) => {
         try {
             const deletedCanvas = await Board.findByIdAndDelete(boardId);
             if (!deletedCanvas) {
