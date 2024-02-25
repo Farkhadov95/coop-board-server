@@ -84,7 +84,7 @@ io.on('connection', (socket) => {
             console.log(createdBoard);
 
             socket.emit('newCanvas', createdBoard);
-            socket.broadcast.emit('createCanvas', createdBoard);
+            socket.broadcast.emit('newCanvas', createdBoard);
         } catch (error) {
             console.error('Error saving canvas to MongoDB:', error);
         }
