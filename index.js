@@ -81,6 +81,7 @@ io.on('connection', (socket) => {
 
             console.log(`New board "${title}" created successfully.`);
             const createdBoard = await Board.findOne({ title });
+            console.log(createdBoard);
 
             socket.broadcast.emit('newCanvas', createdBoard);
         } catch (error) {
