@@ -136,11 +136,10 @@ io.on('connection', (socket) => {
             }
             console.log(`Canvas with ID "${boardId}" deleted successfully`);
             socket.emit('canvasDeleted', boardId);
+            socket.broadcast.emit('canvasDeleted', boardId);
         } catch (error) {
             console.error('Error deleting canvas:', error);
         }
-
-        socket.broadcast.emit('canvasDeleted', boardId);
     });
 
     socket.on('disconnect', () => {
